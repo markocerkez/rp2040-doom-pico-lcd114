@@ -1,3 +1,7 @@
+if(NOT COMMAND suppress_tinyusb_warnings)
+  function(suppress_tinyusb_warnings)
+  endfunction()
+endif()
 if (PICO_SDK)
     set(BINARIES doom)
 else()
@@ -716,6 +720,8 @@ target_compile_definitions(doom_tiny_usb_LILYGO_TTGO PRIVATE
 add_doom_tiny_screen("ST7789_240_135")
 target_compile_definitions(doom_tiny_ST7789_240_135 PRIVATE
     DOWNSAMPLING_FACTOR_OUT_OF_100=148
+    PICO_AUDIO_I2S_DATA_PIN=28
+    PICO_AUDIO_I2S_CLOCK_PIN_BASE=26
 )
 
 add_doom_tiny_screen("ST7735_128_128")

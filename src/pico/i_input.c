@@ -32,6 +32,7 @@
 #include "m_argv.h"
 #include "m_config.h"
 #include "hardware/uart.h"
+#include "hardware/gpio.h"
 #include <stdlib.h>
 #if USB_SUPPORT
 #include "pico/binary_info.h"
@@ -511,7 +512,63 @@ static void pico_quit(void) {
 }
 #endif
 
+
+// ---- Waveshare Pico-LCD-1.14 buttons (active low, internal pull-ups) ----
+#define WS_KEY_A      15
+#define WS_KEY_B      17
+#define WS_JOY_UP      2
+#define WS_JOY_DOWN   18
+#define WS_JOY_LEFT   16
+#define WS_JOY_RIGHT  20
+#define WS_JOY_PRESS   3
+
+enum { SC_RETURN = 40, SC_ESCAPE = 41, SC_RIGHT = 79, SC_LEFT = 80, SC_DOWN = 81, SC_UP = 82, SC_Y = 28 };
+
+static const struct { uint8_t pin; uint8_t sc1; uint8_t sc2; } ws_buttons[] = {
+    { WS_JOY_UP,    SC_UP,    0 },
+    { WS_JOY_DOWN,  SC_DOWN,  0 },
+    { WS_JOY_LEFT,  SC_LEFT,  0 },
+    { WS_JOY_RIGHT, SC_RIGHT, 0 },
+    { WS_KEY_A,     SDL_SCANCODE_RCTRL, SC_RETURN },   // fire; also "select" in menus
+    { WS_KEY_B,     SDL_SCANCODE_SPACE, SC_Y },        // use/open doors; also "yes"
+    { WS_JOY_PRESS, SC_ESCAPE, 0 },                    // menu
+};
+#define WS_NUM_BUTTONS (sizeof(ws_buttons) / sizeof(ws_buttons[0]))
+
+static void ws_buttons_init(void) {
+    for (uint i = 0; i < WS_NUM_BUTTONS; i++) {
+        gpio_init(ws_buttons[i].pin);
+        gpio_set_dir(ws_buttons[i].pin, GPIO_IN);
+        gpio_pull_up(ws_buttons[i].pin);
+    }
+}
+
+static void ws_buttons_poll(void) {
+    static uint8_t prev[WS_NUM_BUTTONS];
+    static uint8_t debounce[WS_NUM_BUTTONS];
+    for (uint i = 0; i < WS_NUM_BUTTONS; i++) {
+        uint8_t down = !gpio_get(ws_buttons[i].pin);
+        if (down != prev[i]) {
+            if (++debounce[i] < 2) continue;       // two consecutive reads
+            debounce[i] = 0;
+            prev[i] = down;
+            if (down) {
+                pico_key_down(ws_buttons[i].sc1, 0, 0);
+                if (ws_buttons[i].sc2) pico_key_down(ws_buttons[i].sc2, 0, 0);
+            } else {
+                pico_key_up(ws_buttons[i].sc1, 0, 0);
+                if (ws_buttons[i].sc2) pico_key_up(ws_buttons[i].sc2, 0, 0);
+            }
+        } else {
+            debounce[i] = 0;
+        }
+    }
+}
+
 void I_InputInit(void) {
+#if PICO_ON_DEVICE
+    ws_buttons_init();
+#endif
 #if PICO_NO_HARDWARE
     platform_key_down = pico_key_down;
     platform_key_up = pico_key_up;
@@ -530,6 +587,9 @@ void I_GetEvent() {
 }
 
 void I_GetEventTimeout(int key_timeout) {
+#if PICO_ON_DEVICE
+    ws_buttons_poll();
+#endif
 #if PICO_ON_DEVICE && !NO_USE_UART
     if (uart_is_readable(uart_default)) {
         char c = uart_getc(uart_default);
