@@ -268,6 +268,11 @@ void I_InitSound(boolean use_sfx_prefix)
 
     nomusic = M_CheckParm("-nomusic") > 0;
 
+#if NO_SOUND_HW
+    // Build for boards without an I2S DAC: never bring up audio at all.
+    nosound = true;
+#endif
+
 #if !NO_USE_MUSIC_PACKS
     //!
     //

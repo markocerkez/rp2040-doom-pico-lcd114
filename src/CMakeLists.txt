@@ -722,6 +722,7 @@ target_compile_definitions(doom_tiny_ST7789_240_135 PRIVATE
     DOWNSAMPLING_FACTOR_OUT_OF_100=148
     PICO_AUDIO_I2S_DATA_PIN=28
     PICO_AUDIO_I2S_CLOCK_PIN_BASE=26
+    NO_SOUND_HW=1
 )
 
 add_doom_tiny_screen("ST7735_128_128")
