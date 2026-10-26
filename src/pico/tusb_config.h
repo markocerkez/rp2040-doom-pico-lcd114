@@ -25,6 +25,16 @@
 
 #ifndef _TUSB_CONFIG_H_
 #define _TUSB_CONFIG_H_
+#if DIAG_BUILD
+// diagnostic build: USB CDC device for stdio instead of USB host keyboard
+#include "pico/stdio_usb.h"
+#define CFG_TUSB_RHPORT0_MODE   (OPT_MODE_DEVICE)
+#define CFG_TUD_CDC             (1)
+#define CFG_TUD_CDC_RX_BUFSIZE  (256)
+#define CFG_TUD_CDC_TX_BUFSIZE  (256)
+#define CFG_TUD_VENDOR          (0)
+#define CFG_TUSB_OS             OPT_OS_PICO
+#else
 
 #ifdef __cplusplus
  extern "C" {
@@ -95,4 +105,5 @@
  }
 #endif
 
+#endif // DIAG_BUILD
 #endif /* _TUSB_CONFIG_H_ */

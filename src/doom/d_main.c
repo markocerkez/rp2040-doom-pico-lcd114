@@ -542,6 +542,9 @@ void D_DoomLoop (void)
 #if !NO_USE_MOUSE
     I_SetGrabMouseCallback(D_GrabMouseCallback);
 #endif
+#if DIAG_BUILD
+    printf("[diag] D_DoomLoop -> I_InitGraphics\n");
+#endif
     I_InitGraphics();
 #if USB_SUPPORT
     printf("Sleeping 2s for USB devices\n"); // TinyUSB still grinds to a halt during connect/disconnect
@@ -1327,6 +1330,9 @@ static void G_CheckDemoStatusAtExit (void)
 //
 void D_DoomMain (void)
 {
+#if DIAG_BUILD
+    printf("[diag] D_DoomMain\n");
+#endif
     int p;
     char file[256];
     char demolumpname[9];

@@ -723,7 +723,16 @@ target_compile_definitions(doom_tiny_ST7789_240_135 PRIVATE
     PICO_AUDIO_I2S_DATA_PIN=28
     PICO_AUDIO_I2S_CLOCK_PIN_BASE=26
     NO_SOUND_HW=1
+    PICO_PANIC_FUNCTION=doom_panic
 )
+if (PICO_ON_DEVICE)
+    # diagnostic build: USB serial log; WAD moves up to make room for TinyUSB
+    target_compile_definitions(doom_tiny_ST7789_240_135 PRIVATE TINY_WAD_ADDR=0x10044000 DIAG_BUILD=1)
+    pico_enable_stdio_usb(doom_tiny_ST7789_240_135 1)
+    target_link_libraries(doom_tiny_ST7789_240_135 PRIVATE pico_stdio_usb)
+    pico_enable_stdio_uart(doom_tiny_ST7789_240_135 0)
+    target_compile_options(doom_tiny_ST7789_240_135 PRIVATE -UPICO_TIME_DEFAULT_ALARM_POOL_DISABLED)
+endif()
 
 add_doom_tiny_screen("ST7735_128_128")
 target_compile_definitions(doom_tiny_usb_ST7735_128_128 PRIVATE

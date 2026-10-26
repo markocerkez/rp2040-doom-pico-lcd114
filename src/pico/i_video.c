@@ -238,6 +238,9 @@ void I_SetPaletteNum(int doompalette)
 //
 void I_FinishUpdate (void)
 {
+#if DIAG_BUILD
+    static int diag_frames; if (diag_frames < 3 || (diag_frames % 100) == 0) printf("[diag] frame %d\n", diag_frames); diag_frames++;
+#endif
 }
 
 uint8_t display_frame_index;
@@ -940,6 +943,9 @@ void __scratch_x("scanlines") fill_scanlines() {
 
 //static semaphore_t init_sem;
 static void core1() {
+#if DIAG_BUILD
+    printf("[diag] core1 up\n");
+#endif
     sem_release(&core1_launch);
     while (true) {
         pd_core1_loop();
@@ -952,6 +958,9 @@ static void core1() {
 
 void I_InitGraphics(void)
 {
+#if DIAG_BUILD
+    printf("[diag] I_InitGraphics\n");
+#endif
 
     I_initScreen();
 

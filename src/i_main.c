@@ -53,6 +53,18 @@ void D_DoomMain (void);
 bi_decl(bi_3pins_with_names(PICO_AUDIO_I2S_DATA_PIN, "I2S DIN", PICO_AUDIO_I2S_CLOCK_PIN_BASE, "I2S BCK", PICO_AUDIO_I2S_CLOCK_PIN_BASE+1, "I2S LRCK"));
 #endif
 
+#if PICO_ON_DEVICE
+#include <stdarg.h>
+#include "pico/st7789.h"
+#include "pico/stdio_usb.h"
+void __attribute__((noreturn)) doom_panic(const char *fmt, ...) {
+    va_list ap; va_start(ap, fmt);
+    printf("\nPANIC: "); vprintf(fmt, ap); printf("\n"); va_end(ap);
+    st7789_fill(0xf800);                       // red screen = panic
+    while (1) { sleep_ms(1000); printf("PANIC: "); va_start(ap, fmt); vprintf(fmt, ap); va_end(ap); printf("\n"); }
+}
+#endif
+
 int main(int argc, char **argv)
 {
     // save arguments
@@ -76,6 +88,10 @@ int main(int argc, char **argv)
 #endif
 #if LIB_PICO_STDIO
     stdio_init_all();
+#endif
+#if DIAG_BUILD
+    for (int i = 0; i < 30; i++) { sleep_ms(100); if (stdio_usb_connected()) break; }
+    printf("\n[diag] rp2040-doom Pico-LCD-1.14 starting, WAD at %p\n", (void*)TINY_WAD_ADDR);
 #endif
 #if PICO_BUILD
     I_Init();
